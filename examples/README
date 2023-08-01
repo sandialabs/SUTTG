@@ -1,0 +1,35 @@
+This directory contains example input decks for SUTTG. The input decks
+generate the outputs given in the "data" directory. The contents of
+the examples are as follows.
+
+waterfullopt97-1p0fast.xml:
+waterfullopt97-1p0opta.xml:
+waterfullopt97-1p0optb.xml:
+
+  These three examples all utilize the IAPWS-IF97 model. The
+  tabulation is performed over the full range of the model at a rather
+  coarse tolerance. This allows a quick demonstration of the algorithms
+  and a means to test the code. The first deck uses the fast algorithm,
+  the second the optimize algorithm with a step multiplier, and the
+  third the optimize algorithm with no step multiplier. The effect of
+  the algorithm on table size can be seen in the corresponding data
+  tables.
+
+waterfullopt97-0p1optb.xml:
+
+  This example also uses the IAPWS-IF97 model tabulated over the full
+  range of the model using the best optimization settings at a 10%
+  tolerance. This table is likely suitable for use in prototyping
+  simulations.
+
+waterfullopt95-1p0fast.xml:
+
+  This example uses the IAPWS95 model at a coarse tolerance and the
+  fast algorithm. This is mainly for code verification.
+
+waterhighp95-0p01optb.xml:
+
+  This example shows how one may reduce the range of the table to
+  speed up generation and reduce table size. The IAPWS95 model is
+  tabulated to a 1% tolerance. The model is not tabulated below 290 K or
+  10 bar, but otherwise includes the full range.

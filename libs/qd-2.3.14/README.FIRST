@@ -1,0 +1,11 @@
+This directory contains a stripped down version of the Quad Double
+computation package. It only includes the bare essentials to build the
+double-double and quad-double C++ classes.
+
+The configure routine (not included) was used to build the config.h
+and qd_config.h files on an x86 linux machine. For other processors,
+one will need to modify the config for the X86 define.
+
+The build system was converted to use CMake to simplify integration in
+the uq software. Aside from the above X86 define, the generated config
+headers should work on most systems.

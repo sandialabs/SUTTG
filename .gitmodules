@@ -1,0 +1,6 @@
+[submodule "libs/eos"]
+	path = libs/eos
+	url = https://github.com/sandialabs/SESML
+[submodule "libs/utri"]
+	path = libs/utri
+	url = https://github.com/sandialabs/UTri

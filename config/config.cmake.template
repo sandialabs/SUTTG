@@ -1,0 +1,22 @@
+#
+# This config file contains site specific configuration information
+#
+
+#
+# Location of needed libraries -- both an include location for
+# compiling and library link location.
+#
+
+#
+# netcdf
+#
+set(netcdflib)
+set(netcdfinc)
+set(NETCDF_INCLUDE_DIR ${netcdfinc})
+set(NETCDF_LIBRARY ${netcdflib}/libnetcdf.a)
+
+#
+# expat
+#
+set(EXPAT_INCLUDE_DIR)
+set(EXPAT_LIBRARY)

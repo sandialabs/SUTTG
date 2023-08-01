@@ -1,0 +1,10 @@
+This directory contains libraries used by the application code that
+reside one level up in the directory heiarchy.
+
+dsfmt       : SIMD-oriented Fast Mersenne Twister (SFMT) random number library
+eos         : Equation of State model library
+gtest-1.6.0 : Google C++ Testing Framework
+mcmcm       : Markov Chain Monte Carlo sampler
+port-dmnfb  : DMNFB minimization routine from the PORT library
+utri        : Sandia Unstructured Triangle Tabular Interpolation Package
+XMLUtils    : C++ interface to the XML Expat library

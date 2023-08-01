@@ -1,0 +1,105 @@
+This directory contains code to support creation and use of equation
+of state (EOS) tables based upon an unstructured triangular
+representation.
+
+************************************************************************
+* File information
+************************************************************************
+
+1) The core table infrastructure:
+
+This is built into the utri library and contains the files:
+
+eosdatapoints.c
+eosdatapoints.h
+ncstatus.h
+utri_eos_rptree.c
+utri_eos_support.c
+utri_eos_support.h
+
+2) MIG interface support:
+
+Support for installing the EOS table reader in a code which supports
+the MIG interface is found in the files:
+
+fortran_link.h
+mig_c_fun.f
+mig_c_fun_wrap.c
+mig_c_fun_wrap.h
+utri_eos_ncstatus.c
+
+3) Triangulation support:
+
+Support for performing Delaunay triangulations is found in the files:
+
+deltribound2.C
+deltribound.h
+sweep_hull_delaunay.C
+sweep_hull_delaunay.h
+
+This capability is used in the table generation code.
+
+4) Table format test writer and reader
+
+Two simple programs test the writing and reading of the netcdf format
+table. These are the tl and ti programs which involve the following
+source files (in addition to the files in (1-3)):
+
+tricreate.c
+testinterp.c
+std_ncstatus.c
+mig_routines.f
+
+5) Minimization routine dmnfb
+
+The minimization routine dmnfb from the PORT library is included in
+the directory port-dmnfb, as well as supporting routines.
+
+6) EOS table generation code:
+
+The program bt generates EOS tables in the utri format. The following
+source files are used (in addition to those of 1, 3, and 5 and the eos
+library):
+
+buildtables.C
+BMesh.C
+BMesh.h
+TriMesh.C
+TriMesh.h
+Tri.h
+Node.h
+RMesh.C
+RMesh.h
+
+The bt program takes as input a model specification, a table
+containing samples of the varied model parameters, and a desired
+tabulation tolerance. A topology is generated for the first parameter
+set in the table and then subsequent parameter sets are tabulated on
+that topology. The first table is guaranteed to meet the tolerance
+criteria. Attempts are made to ensure the other tables also meet this
+criteria, but they may not always succeed. A pair of
+density-temperature and density-energy tables is output for each of
+the input parameter sets.
+
+7) EOS table visualization code:
+
+A simple code to read in an EOS table and generate data for
+visualization is included in the file:
+
+tableviz.C
+
+It depends on std_ncstatus.c and the utri library. It takes as input
+two command line parameters, the table file name and the type of table
+(1 for r,t 2 for r,e). It outputs a sample grid of table evaluations
+as well as the set of triangles which the table defines.
+
+************************************************************************
+* Installation of reader in a host code
+************************************************************************
+
+All files listed above in the core table infrastructure and MIG
+support sections (1 and 2) must be kept in sync between this
+repository and the host install location. In addition, the host will
+need to implement the appropriate high-level MIG interface wrappers to
+call the utri routines.
+

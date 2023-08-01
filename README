@@ -1,0 +1,383 @@
+This is the Sandia Unstructured Triangle Table Generator
+(SUTTG). SUTTG is distributed under the BSD License, see LICENSE.
+
+SUTTG tabulates thermodynamic functions in an unstructured triangular
+format suitable for reading by the UTri library. The resulting tables
+represent the functions to a specified level of accuracy. This version
+of SUTTG includes the SESML library with thermodynamic models for
+water.
+
+For any questions related to this software, email jhcarpe@sandia.gov
+
+This file is broken down into the following sections:
+
+1. Building
+2. Usage
+
+-----------
+1. Building
+-----------
+
+This section contains the following parts:
+
+1.1 Requirements
+1.2 Configuring and Building
+1.3 Testing
+1.4 Installing
+
+----------------
+1.1 Requirements
+----------------
+
+The following are required for building:
+
+  CMake (version 2.8.6 or later)
+  C/C++/FORTRAN compilers
+  Posix threads
+  MPI
+  NetCDF (version 4 specific features are not used)
+  Expat
+
+Additionally, the following packages are included in the tree:
+
+  Google C++ Testing Framework (GTest)
+  Quad Double computation package
+  Sandia Unstructured Triangle Interpolation Package (UTri)
+  Sandia Equation of State Model Library (SESML)
+
+SUTTG has been tested on Linux with the GCC suite >= 4.4, OpenMPI >=
+1.4, and NetCDF 3.6 and 4.2.1.1. Use of other platforms, compiler,
+and/or library versions may require additional porting.
+
+----------------------------
+1.2 Configuring and Building
+----------------------------
+
+One must first set up a config file, 'config.cmake', in the 'config'
+directory. A template is provided in that directory. The library and
+include directories must be set for finding NetCDF. If the Expat
+library is in a non-standard location its include path and library
+must also be specified, otherwise these variables may be left empty.
+
+Out-of-tree building is recommended for SUTTG. To configure, one may
+then do:
+
+> mkdir build; cd build
+> cmake <path to SUTTG root>
+
+By default SUTTG is build with optimizations. One may change the
+CMAKE_BUILD_TYPE from Release to Debug for a debug enabled
+build. Also, one may set CMAKE_INSTALL_PREFIX to override the default
+install location.
+
+To build, simply run make.
+
+-----------
+1.4 Testing
+-----------
+
+There are some basic tests included with SUTTG. These may be run with
+the command 'make test'. This will run the SESML test suite as well as
+the native SUTTG tests.
+
+--------------
+1.5 Installing
+--------------
+
+> make install
+
+The executables will be installed to CMAKE_INSTALL_PREFIX/bin.
+Example input decks will be installed to
+CMAKE_INSTALL_PREFIX/share/suttg/examples
+and pre-generated tables to
+CMAKE_INSTALL_PREFIX/share/suttg/data.
+
+--------
+2. Usage
+--------
+
+This section contains the following parts:
+
+2.1 Table Generator
+2.2 Table Visualization Dump
+
+-------------------
+2.1 Table Generator
+-------------------
+
+Tables are generated in the UTri format using the 'utriTableBuilder'
+program. This program takes as input a single XML input deck. Examples
+of this input deck are included in the examples directory. The
+features of this input deck are given below.
+
+The EOSInference element is the root element. It must contain three
+child elements, RunSettings, EOSModel, and Tabulation.
+
+RunSettings element:
+
+  The RunSettings element lists the desired model and type of
+  tabulation. In particular it must contain two attributes, "model"
+  and "tabulation". The string values of these attributes must be the
+  name of child elements in the EOSModel and Tabulation elements,
+  respectively. For example,
+
+  <RunSettings model="water" tabulation="utri"/>
+
+EOSModel element:
+
+  The EOSModel element contains the specification of the thermodynamic
+  models and their parameters. The name of child elements may be
+  arbitrary. Each child element must contain a "type" attribute whose
+  string value is the name of a model from the SESML library. This
+  child's children elements give the parameter values for the
+  model. Parameter elements may be of type "DParam", "IParam", and
+  "SParam", for floating point, integer, and string parameters,
+  respectively. Each parameter element must contain the "name" and
+  "value" attributes. The string value of name must correspond with the
+  name of the type model's parameter in the SESML library.
+
+  For the water models in SESML, only one integer parameter is
+  available, TEMP_EXTRAP, and it is recommended to set this to 1. For
+  the IAPWS95 model an entry in the EOSModel element might look like the
+  following:
+
+  <water type="IAPWS95"><IParam name="TEMP_EXTRAP" value="1"/></water>
+
+Tabulation element:
+
+  The Tabulation element contains the details for how the
+  utriTableBuilder program should generate the tabulation of the model
+  requested in the RunSettings element. There are four attributes for
+  the Tabulation element that set default values in the tables. In
+  particular, "A", "Z", "RRef", and "TRef", which respectively give the
+  average atomic weight and number, and reference density and
+  temperature for the model.
+
+  The Tabulation element must contain a child element named by the
+  value of the "tabulation" attribute of RunSettings. This child element
+  describes the details of the tabulation process and has attributes
+  as listed in the following with more detailed description below.
+
+  attribute name  | need     | default  | short description
+  --------------------------------------------------------
+  type            | required |   ---    | specify table type
+  basename        | required |   ---    | base file name for table
+  tolerance       | required |   ---    | requested table accuracy
+  boundarySamples | optional |     2    | samples along a boundary side
+  regionSamples   | optional |     2    | samples on a triangle
+  meshvars        | optional |    RX    | independent variables for table
+  logvars         | optional |     1    | whether to tabulate in the log space
+  numthreads      | optional |     0    | threads used for error evaluations
+  algorithm       | optional | optimize | node optimization algorithm
+  stepmultiplier  | optional |   0.1    | reduction factor for max Markov steps
+  steperrorlevel  | optional |   1.0    | multiplier ignored below this error
+  addNodes        | optional |     1    | number of nodes to add each iteration
+
+  type: currently this must be "utri"
+
+  basename: the output table takes this basename appended with a
+            string denoting the table type
+
+  tolerance: the relative accuracy requested for the table. The
+             smaller the number, the longer the table generation
+             process will take. Some models contain discontinuities,
+             not along phase boundaries, that can cause the table
+             generation to fail if the tolerance is set too small. For
+             example, the IAPWS-IF97 model contains such
+             discontinuities in its formulation and has an effective
+             minimum tolerance of approximately 0.003.
+
+  boundarySamples: The number of samples at which to evaluate the
+                   error along each segment of the boundary. This
+                   should be set much higher than regionSamples to
+                   ensure that the boundary is properly refined for
+                   the interior meshing algorithms.
+
+  regionSamples: The number of samples at which to evaluate the error
+                 on a triangle along each edge. The center of the
+                 triangle is sampled at points given by the
+                 barycentric mesh of the edge points. For example,
+                 regionSamples = 2 implies having a single evaluation
+                 of the triangle in its center in addition to the 2
+                 along each edge, for a total of 7 samples. One should
+                 take care to set boundarySamples to a multiple of
+                 regionSamples so that the exact same points along a
+                 boundary are tested for error in both triangles and
+                 the boundary curves.
+
+  meshvars: The type of independent variables for the table. For the
+            water models, currently one must choose "PE".
+
+  logvars: If non-zero, then meshing is done in the log space of the
+           independent variables.
+
+  numthreads: The number of computation threads with which to evaluate
+              errors in the optimization algorithms. If set to 0, then
+              a non-threaded algorithm is used. If 1 or greater, a
+              threaded error evaluation is used. One should not set
+              the number of threads to a value greater than the number
+              of cores for the node on which the tabulation is computed.
+
+  algorithm: The optimization algorithm to use when meshing the
+             interiors of phase regions. There are two choices, either
+             "fast" or "optimize".
+
+             The fast algorithm places new nodes at the sampled mesh
+             location with the highest error. While this is quicker
+             than putting new nodes in a more optimal position, it
+             can lead to meshes with much more nodes than are
+             necessary for meeting the desired accuracy goal.
+
+             The optimize algorithm uses a Markov chain to attempt to
+             minimize the error of a set of triangles around the
+             triangle with maximum error. Nodes may be added in the
+             process. This algorithm can generate meshes with much
+             fewer nodes than the fast algorithm, at the price of a
+             possibly much longer generation time.
+
+  stepmultiplier: This variable only is used in the optimize
+                  algorithm. The maximum number of steps in a Markov
+                  chain when optimizing a set of nodes is multiplied
+                  by this value. It can only be less than or equal to
+                  one. When less than one it allows a more crude
+                  computation of the optimal node locations but at a
+                  faster pace. This typically results in meshes with
+                  more nodes than optimal for a given accuracy, but
+                  may take less time to generate them.
+
+  steperrorlevel: This variable only is used in the optimize
+                  algorithm. When the maximum error, normalized to the
+                  desire tolerance is larger than this value, then the
+                  above stepmultiplier is applied. When greater than
+                  one, this can be used to try to quickly add nodes to
+                  the mesh until a certain error level is reached and
+                  then try to minimize the remaining error with a more
+                  accurate placement of nodes. This is a compromise
+                  between turning on or off the stepmultiplier.
+
+  addNodes: When adding new nodes to the interior of the mesh, this
+            specifies how many to add at once. When using the fast
+            algorithm, addNodes number of nodes are placed at the
+            first addNodes number of largest errors in the mesh. In
+            the optimize algorithm, this many nodes are added to the
+            next Markov chain minimization of the largest error
+            triangle.
+
+            Setting this value greater than one may speed up the time
+            to generate the interior meshes, particularly for the fast
+            algorithm, as it reduces the number of error evaluations
+            to reach a given number of nodes. However, it may lead to
+            many more nodes to be in the mesh than otherwise would
+            have been placed by the algorithm.
+
+  Children of the Tabulation element must also define the bounds for
+  the table. This is done with two child elements of their own to
+  specify a rectangular region in density-temperature or
+  pressure-temperature space. When tabulating with independent
+  variables PX, such as for the water models, only pressure-temperature
+  bounds are necessary. The bound elements have the form <XBounds
+  lower="" upper=""/> where X is T or P. The upper and lower bound
+  attributes are in SI units. When using pressure bounds, one must
+  ensure that any phase boundaries do not intersect with the upper or
+  lower pressure boundaries. This would create a discontinuity along
+  that boundary which the tabulation code currently does not support.
+
+The utriTableBuilder program produces some diagnostic output while it
+is running to allow tracking of the progress in tabulation. The type
+of output depends on the interior node optimization algorithm.
+
+First, nodes are placed along the boundaries of the tabulation
+region. Output from this optimization is quite succinct and has the
+form:
+
+boundary 0 nodes 6 accuracy 0.9 time 0.45894
+
+The boundary number is given, followed by the number of nodes placed
+on the boundary, the target accuracy and the time in seconds required
+to place the nodes.
+
+The diagnostic output from the interior node placement algorithms
+occurs more frequently, with every iteration of the algorithm. For the
+fast algorithm, a typical line is:
+
+region 1 nodes 1126 err 4.4553 berr 3.46664
+
+This lists the current region being optimized, the number of nodes
+placed in the region, the current error for the region and the best
+error sampled for the region. Note that the current error may be
+larger than the best error, as shown in the example, due to two
+reasons. Placement of additional nodes may cause the Delaunay
+triangulation to switch a triangle edge in a direction that has a
+higher error than the prior direction. Also, dividing triangles with
+new nodes may improve the sampling coverage to pick up a region of
+space that had not been well characterized.
+
+For the optimize algorithm, a more detailed output is given. A typical
+line is shown below:
+
+UTriTables::optimize_nodes: nn 117 sme 1.54866 fme 1.57755 tini 0.000208139 tmin 3.37052 tmov 0.000926971 terr 0.00703192 bme 1.55445 ttri 1.28746e-05 tset 0.000132084 topt 3.37901
+
+The number following "nn" is the number of nodes placed in the mesh,
+"sme" gives the sub-mesh error, "fme" gives the full mesh error, and
+"bme" gives the best mesh error. As for the fast algorithm, the fme
+value may at times be larger than the bme value, as shown in the above
+example. The sme denotes the error of the region being optimized in
+the current iteration. This is only a subset of nodes and triangles of
+the full mesh. As seen in the above example, the sme may be smaller
+than the fme. This simply indicates that the optimization reduced the
+error on the submesh enough that the maximum error in the full mesh is
+no longer in that sub-region.
+
+The remaining entries of the output are timing information. In
+particular, "topt" gives the total time for that iteration of the
+optimization. The other times break down specific parts of the
+iteration. The "tmin" is the minimization time to find sme, and "terr"
+is the time to find fme. These should be the two dominant times
+contributing to topt.
+
+At completion of the optimization, the program will output some final
+statistics and print the name of the table that was generated. For
+example,
+
+btimes: 0 = 0.0830629 1 = 0.00344491 2 = 0.26112 3 = 0.00615096 4 = 0.225798 5 = 0.102147 6 = 36.1141 7 = 33.6019
+rtimes: 0 = 411.414 1 = 4710
+btime = 70.3977 rtime = 5121.41 total time = 5191.81
+Building table h2o97-1p0optb-pe.nc
+Saving table h2o97-1p0optb-pe.nc
+
+The first three lines redisplay the timing information for meshing the
+boundaries and regions. The final two lines show the name of the table
+output file.
+
+Several example input decks are given in the "examples" directory.
+Refer to the README in that directory for more information.
+
+----------------------------
+2.2 Table Visualization Dump
+----------------------------
+
+Once a table has been created, it resides in a NetCDF file. A helper
+program (utriTableDump) is generated that aids in visualizing the
+table by dumping its contents into a text file. The program has the
+following usage:
+
+> utriTableDump <tablefile> <tabletype>
+
+The desired NetCDF table is specified as <tablefile> and the type of
+the table in <tabletype>. The allowed table types are specified as
+integers corresponding to the following independent variable spaces:
+
+type |    X     |     Y
+---------------------------------
+ 1   | density  | temperature
+ 2   | density  | internal energy
+ 3   | pressure | enthalpy
+ 4   | pressure | entropy
+ 5   | pressure | internal energy
+
+The utriTableDump program then reads in the table and dumps to
+standard output two sections. First, an evaluation of the table on a
+uniform 100x100 grid covering the bounds of the table. Second it
+prints out all triangles in the table, including the data at each
+triangle vertex. The resulting output may then be displayed using
+various plotting programs.

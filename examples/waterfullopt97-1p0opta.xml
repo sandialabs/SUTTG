@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<EOSInference>
+
+  <RunSettings model="water" tabulation="TRECT"/>
+
+  <!-- Specification of the EOS model and its parameters -->
+  <EOSModel>
+
+   <water type="IAPWSIF97">
+    <IParam name="TEMP_EXTRAP" value="1"/>
+   </water>
+
+  </EOSModel>
+
+  <Tabulation A="18." Z="10.0" RRef="1." TRef="298." >
+
+    <TRECT type="utri" basename="h2o97-1p0opta" tolerance="1.0" boundarySamples="100" regionSamples="2" meshvars="PE" logvars="0" numthreads="8" algorithm="optimize">
+      <TBounds lower="273.16" upper="1073.15"/>
+      <PBounds lower="1.e4" upper="1.e8"/>
+    </TRECT>
+
+  </Tabulation>
+
+</EOSInference>
